@@ -1,17 +1,21 @@
-import json
+import io
 from car.models import Car
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+
 from car.serializers import CarSerializer
 
 
 def serialize_car_object(car: Car) -> bytes:
+    pass
     serializer = CarSerializer(car)
-    json_string = json.dumps(serializer.data)
-    return json_string.encode("utf-8")
+    return JSONRenderer().render(serializer.data)
 
 
-def deserialize_car_object(json: bytes) -> Car:
-    json_string = json.decode("utf-8")
-    data = json.loads(json_string)
+def deserialize_car_object(json_bytes: bytes) -> Car:
+    stream = io.BytesIO(json_bytes)
+    data = JSONParser().parse(stream)
     serializer = CarSerializer(data=data)
-    if serializer.is_valid(raise_exception=True):
-        return serializer.save()
+    serializer.is_valid(raise_exception=True)
+    instance = serializer.save()
+    return instance
